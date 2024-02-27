@@ -26,7 +26,9 @@ pipeline{
             }
 
         stage("Performing code analysis"){
-            echo "code analysis complete"
+            steps{
+                echo "code analysis complete"
+            }
         }
         
         stage("Building docker image"){
@@ -36,7 +38,9 @@ pipeline{
         }
 
         stage("performing image scanning"){
-            echo "image scanning completed"
+            steps{
+                echo "image scanning completed"
+            }
         }
         
         stage("Pushing image to dockerhub"){
