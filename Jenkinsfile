@@ -24,11 +24,19 @@ pipeline{
                 echo "Running test casses"
                 }
             }
+
+        stage("Performing code analysis"){
+            echo "code analysis complete"
+        }
         
         stage("Building docker image"){
             steps{
                 sh "docker build -t node-todo-app:${params.TAG_NAME} ."
             }
+        }
+
+        stage("performing image scanning"){
+            echo "image scanning completed"
         }
         
         stage("Pushing image to dockerhub"){
