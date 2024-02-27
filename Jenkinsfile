@@ -3,7 +3,7 @@ pipeline{
     
     parameters{
         booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run tests ? ')
-        string(name: 'TAG_NAME', defaultValue: '', description : 'Enter the image tag name: ')
+        string(name: 'TAG_NAME', defaultValue: 'latest', description : 'Enter the image tag name: ')
     }
     
     stages{
