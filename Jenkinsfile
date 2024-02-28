@@ -12,18 +12,18 @@ pipeline{
             steps{
                 git url: "https://github.com/ShailedraSharma/jenkins-cicd.git", branch: "master"
                 echo "code cloned"
-                sh "ls -ltr"
+                bat "dir" // Windows command to list files in the directory
             }
         }
         
-        stage("Running test casses"){
+        stage("Running test cases"){
             when{
                 expression { params.RUN_TESTS }
             }
             steps{
-                echo "Running test casses"
-                }
+                echo "Running test cases"
             }
+        }
 
         stage("Performing code analysis"){
             steps{
@@ -33,32 +33,33 @@ pipeline{
         
         stage("Building docker image"){
             steps{
-                sh "docker build -t node-todo-app:${params.TAG_NAME} ."
+                bat "docker build -t node-todo-app:${params.TAG_NAME} ."
             }
         }
 
-        stage("performing image scanning"){
+        stage("Performing image scanning"){
             steps{
                 echo "image scanning completed"
             }
         }
         
-        stage("Pushing image to dockerhub"){
+        stage("Pushing image to DockerHub"){
             steps{
                 withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
-                    sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                    sh "docker tag node-todo-app:${params.TAG_NAME} ${env.dockerHubUser}/node-todo-app:${params.TAG_NAME}"
-                    sh "docker push ${env.dockerHubUser}/node-todo-app:${params.TAG_NAME}"
+                    bat "docker login -u %dockerHubUser% -p %dockerHubPass%"
+                    bat "docker tag node-todo-app:${params.TAG_NAME} %dockerHubUser%/node-todo-app:${params.TAG_NAME}"
+                    bat "docker push %dockerHubUser%/node-todo-app:${params.TAG_NAME}"
                 }
             }
         }
         
         stage("Deploying docker image"){
             steps{
-                sh "docker-compose down && docker-compose up -d"
-                echo "container is running"
+                withKubeConfig([credentialsId: 'minikubeConfig']) {
+                    bat "kubectl apply -f deployment.yaml"
             }
         }
+        }
+        
     }
-    
 }
