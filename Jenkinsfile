@@ -56,7 +56,7 @@ pipeline{
                         (Get-Content deployment.yaml) -replace 'TAG_NAME', '${TAG_NAME}' | Set-Content deployment.yaml
                         """
                         bat "type deployment.yaml"
-                        bat "kubectl apply -f deployment.yaml -n development"
+                        bat "kubectl apply -f deployment.yaml -n devlopment"
                     }
                 }
             }
