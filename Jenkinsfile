@@ -9,7 +9,7 @@ pipeline{
         
         stage("code checkout"){
             steps{
-                git url: "https://github.com/ShailedraSharma/jenkins-cicd.git"
+                git url: "https://github.com/ShailedraSharma/jenkins-cicd.git", branch: "${GIT_BRANCH}"
                 echo "code cloned"
                 bat "dir" // Windows command to list files in the directory
             }
