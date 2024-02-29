@@ -3,7 +3,6 @@ pipeline{
     
     parameters{
         booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run tests ? ')
-        string(name: 'TAG_NAME', defaultValue: 'latest', description : 'Enter the image tag name: ')
     }
     
     stages{
@@ -22,24 +21,19 @@ pipeline{
             }
             steps{
                 echo "Running test cases"
-            }
-        }
-
-        stage("Performing code analysis"){
-            steps{
-                echo "code analysis complete"
+                bat "npm install && npm audit fix --force && npm run test"
             }
         }
         
         stage("Building docker image"){
             steps{
-                bat "docker build -t node-todo-app:${params.TAG_NAME} ."
+                bat "docker build -t node-todo-app:${BUILD_NUMBER} ."
             }
         }
 
         stage("Performing image scanning"){
             steps{
-                echo "image scanning completed"
+                bat "trivy -f table -o result.txt image node-todo-app:${BUILD_NUMBER}"
             }
         }
         
@@ -47,8 +41,8 @@ pipeline{
             steps{
                 withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
                     bat "docker login -u %dockerHubUser% -p %dockerHubPass%"
-                    bat "docker tag node-todo-app:${params.TAG_NAME} %dockerHubUser%/node-todo-app:${params.TAG_NAME}"
-                    bat "docker push %dockerHubUser%/node-todo-app:${params.TAG_NAME}"
+                    bat "docker tag node-todo-app:${BUILD_NUMBER} %dockerHubUser%/node-todo-app:${BUILD_NUMBER}"
+                    bat "docker push %dockerHubUser%/node-todo-app:${BUILD_NUMBER}"
                 }
             }
         }
@@ -56,10 +50,25 @@ pipeline{
         stage("Deploying docker image"){
             steps{
                 withKubeConfig([credentialsId: 'minikubeConfig']) {
-                    bat "kubectl apply -f deployment.yaml"
+                    script{
+                        def TAG_NAME="${BUILD_NUMBER}"
+                         powershell """
+                        (Get-Content deployment.yaml) -replace 'TAG_NAME', '${TAG_NAME}' | Set-Content deployment.yaml
+                        """
+                        bat "type deployment.yaml"
+                        bat "kubectl apply -f deployment.yaml -n development"
+                    }
+                }
             }
         }
-        }
-        
     }
+    post{
+            always{
+                emailext(
+                body: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS: Check console output at $BUILD_URL to view the results.', 
+                subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!', 
+                to: 'shailendra.761979@gmail.com'
+                )
+            }
+        }
 }
