@@ -9,7 +9,7 @@ pipeline{
         
         stage("code checkout"){
             steps{
-                git url: "https://github.com/ShailedraSharma/jenkins-cicd.git", branch: "master"
+                git url: "https://github.com/ShailedraSharma/jenkins-cicd.git"
                 echo "code cloned"
                 bat "dir" // Windows command to list files in the directory
             }
@@ -27,13 +27,13 @@ pipeline{
         
         stage("Building docker image"){
             steps{
-                bat "docker build -t node-todo-app:${BUILD_NUMBER} ."
+                bat "docker build -t node-todo-app:M-${BUILD_NUMBER} ."
             }
         }
 
         stage("Performing image scanning"){
             steps{
-                bat "trivy -f table -o result.txt image node-todo-app:${BUILD_NUMBER}"
+                bat "trivy -f table -o result.txt image node-todo-app:M-${BUILD_NUMBER}"
             }
         }
         
@@ -41,8 +41,8 @@ pipeline{
             steps{
                 withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
                     bat "docker login -u %dockerHubUser% -p %dockerHubPass%"
-                    bat "docker tag node-todo-app:${BUILD_NUMBER} %dockerHubUser%/node-todo-app:${BUILD_NUMBER}"
-                    bat "docker push %dockerHubUser%/node-todo-app:${BUILD_NUMBER}"
+                    bat "docker tag node-todo-app:M-${BUILD_NUMBER} %dockerHubUser%/node-todo-app:M-${BUILD_NUMBER}"
+                    bat "docker push %dockerHubUser%/node-todo-app:M-${BUILD_NUMBER}"
                 }
             }
         }
@@ -53,7 +53,7 @@ pipeline{
                     script{
                         def TAG_NAME="${BUILD_NUMBER}"
                          powershell """
-                        (Get-Content deployment.yaml) -replace 'TAG_NAME', '${TAG_NAME}' | Set-Content deployment.yaml
+                        (Get-Content deployment.yaml) -replace 'TAG_NAME', 'M-${TAG_NAME}' | Set-Content deployment.yaml
                         """
                         bat "type deployment.yaml"
                         bat "kubectl apply -f deployment.yaml -n staging"
