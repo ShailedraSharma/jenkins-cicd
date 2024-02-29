@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: todo-app
-        image: shailendrasharma9125/node-todo-app:1.0
+        image: shailendrasharma9125/node-todo-app:${TAG_NAME}
         ports:
         - containerPort: 8000
 ---
